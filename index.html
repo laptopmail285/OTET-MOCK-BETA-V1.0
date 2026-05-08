@@ -118,9 +118,13 @@
         .modal-actions { display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center; }
 
         @media (max-width: 768px) {
+            #exam-view { height: auto !important; min-height: 100vh; }
             .analysis-grid { grid-template-columns: 1fr; }
-            .exam-body { flex-direction: column; }
-            .sidebar { width: 100%; height: 350px; border-top: 1px solid #ccc; }
+            .exam-body { flex-direction: column; overflow: visible !important; }
+            .main-content { margin-right: 0 !important; margin-bottom: 10px; flex: none !important; height: auto !important; overflow: visible !important; }
+            .question-container { overflow: visible !important; }
+            .sidebar { width: 100%; height: auto !important; border-top: 1px solid #ccc; flex: none !important; }
+            .palette-grid-container { max-height: 300px; overflow-y: auto; }
             .exam-header { flex-direction: column; gap: 0.5rem; text-align: center; padding: 0.5rem; }
             .exam-title-bar { flex-direction: column; gap: 0.5rem; text-align: center; }
             .exam-footer { flex-direction: column; gap: 0.5rem; padding: 0.5rem; }
@@ -129,7 +133,7 @@
             .section-tabs { flex-wrap: nowrap; overflow-x: auto; }
             .score-cards { grid-template-columns: 1fr 1fr; }
             .charts-container { grid-template-columns: 1fr; }
-            .palette-grid { grid-template-columns: repeat(6, 1fr) !important; }
+            .palette-grid { grid-template-columns: repeat(8, 1fr) !important; }
             .candidate-profile { display: none !important; }
             .palette-header { flex-direction: column; }
         }
