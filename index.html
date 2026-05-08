@@ -135,11 +135,9 @@
             .exam-header { flex-direction: row; gap: 0.5rem; justify-content: space-between; padding: 0.5rem; text-align: left; }
             .exam-title-bar { flex-direction: row; justify-content: space-between; padding: 0.5rem; font-size: 0.9rem; align-items: center; }
             
-            .exam-footer { flex-direction: column !important; flex-wrap: nowrap !important; gap: 0.5rem; padding: 0.5rem; overflow-x: hidden; }
-            .exam-controls { display: flex !important; width: 100%; gap: 0.5rem; flex-direction: row !important; flex-wrap: wrap; }
-            .exam-controls .btn { flex: 1 1 45%; font-size: 0.8rem; padding: 0.6rem; white-space: normal; line-height: 1.2; text-align: center; }
-            #exam-view .exam-footer .btn-save { flex: 1 1 100%; padding: 0.8rem; font-size: 1rem; font-weight: bold; margin-bottom: 0.25rem; }
-            #exam-view .exam-footer .btn-submit { flex: 1 1 100%; padding: 0.6rem; font-size: 0.9rem; background-color: var(--danger) !important; color: white; border-color: var(--danger); margin-top: 0; }
+            #exam-view .exam-footer { flex-direction: column !important; gap: 0.4rem; padding: 0.5rem 0.75rem; align-items: stretch !important; }
+            #exam-view .exam-footer .exam-controls { display: flex !important; flex-direction: row !important; gap: 0.4rem; width: 100%; }
+            #exam-view .exam-footer .exam-controls .btn { flex: 1; font-size: 0.78rem; padding: 0.55rem 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 38px; }
 
             .section-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .section-tab { font-size: 0.8rem; padding: 0.5rem; white-space: nowrap; }
@@ -314,7 +312,7 @@
                     <button class="btn btn-clear" onclick="app.clearResponse()">Clear Response</button>
                     <button class="btn btn-mark" onclick="app.markForReview()">Mark for Review & Next</button>
                 </div>
-                <div class="exam-controls" style="display: flex; gap: 1rem;">
+                <div class="exam-controls">
                     <button class="btn btn-save" onclick="app.saveAndNext()">Save & Next</button>
                     <button class="btn btn-submit" onclick="app.confirmSubmit()">Submit Test</button>
                 </div>
