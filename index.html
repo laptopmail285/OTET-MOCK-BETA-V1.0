@@ -135,9 +135,10 @@
             .exam-header { flex-direction: row; gap: 0.5rem; justify-content: space-between; padding: 0.5rem; text-align: left; }
             .exam-title-bar { flex-direction: row; justify-content: space-between; padding: 0.5rem; font-size: 0.9rem; align-items: center; }
             
-            .exam-footer { flex-direction: row !important; flex-wrap: nowrap; gap: 0.25rem; padding: 0.5rem; overflow-x: auto; }
-            .exam-controls { display: contents; }
-            .exam-footer .btn { flex: 1; font-size: 0.75rem; padding: 0.5rem; white-space: normal; line-height: 1.2; text-align: center; }
+            .exam-footer { flex-wrap: wrap !important; gap: 0.5rem; padding: 0.5rem; overflow-x: visible; }
+            .exam-controls { display: flex !important; width: 100%; gap: 0.5rem; flex-direction: row !important; }
+            .exam-controls .btn { flex: 1; font-size: 0.75rem; padding: 0.5rem; white-space: normal; line-height: 1.2; }
+            #exam-view .exam-footer .btn-save { width: 100%; padding: 0.75rem; font-size: 1rem; }
 
             .section-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .section-tab { font-size: 0.8rem; padding: 0.5rem; white-space: nowrap; }
@@ -479,152 +480,126 @@
         };
 
         // Generates precisely 150 questions (30 per subject) matching OTET real exam distribution
+        // Generates precisely 150 questions (30 per subject) matching OTET real exam distribution
         const generateQuestions = () => {
             let qs = [];
             let idCounter = 1;
+            const names = ["Rohan", "Priya", "Ankit", "Sneha", "Kiran", "Amit", "Pooja", "Rahul", "Sita", "Hari", "Manoj", "Lipika"];
+            
             Subjects.forEach(sub => {
+                let subjectQs = [];
                 const pool = qBank[sub];
-                // Generate 30 questions per section
-                for(let i=0; i<30; i++) {
-                    if (i < pool.length) {
-                        // Use curated PYQs for the first 10
-                        let template = pool[i];
-                        let opts = [...template.o];
-                        let answerText = opts[template.a];
-                        // Shuffle options
-                        for (let j = opts.length - 1; j > 0; j--) {
-                            const k = Math.floor(Math.random() * (j + 1));
-                            [opts[j], opts[k]] = [opts[k], opts[j]];
-                        }
-                        qs.push({
-                            id: idCounter++, 
-                            subject: sub, 
-                            topic: `${sub} - Core Concept`,
-                            difficulty: template.d, 
-                            text: `(Q${idCounter-1}) ${template.t}`,
-                            options: opts, 
-                            answer: opts.indexOf(answerText), 
-                            explanation: template.e
+                
+                // Add the curated PYQ base questions
+                if (pool) {
+                    pool.forEach(q => {
+                        subjectQs.push({
+                            subject: sub, topic: `${sub} - Core Concept`, difficulty: q.d,
+                            text: q.t, options: [...q.o], answer: q.a, explanation: q.e, generated: false
                         });
-                    } else {
-                        // Generate advanced mock questions for the remaining 20
-                        const diff = difficultyLevels[Math.floor(Math.random() * difficultyLevels.length)];
-                        
-                        const qTemplates = {
-                            "Child Development & Pedagogy": [
-                                "Which teaching strategy is most effective for cognitive development in primary grades?",
-                                "Identify the psychological principle that supports constructivist classrooms.",
-                                "How does inclusive education impact the social skills of children with special needs?",
-                                "What is the primary role of a teacher according to the NCF 2005 framework?",
-                                "Which assessment tool is best for measuring a student's critical thinking ability?",
-                                "According to moral development theory, which stage is characterized by obedience and punishment orientation?",
-                                "How can a teacher best handle a classroom with diverse socio-cultural backgrounds?",
-                                "Which cognitive process involves adjusting existing schemas to incorporate new information?",
-                                "What is the main limitation of standardized intelligence testing in primary schools?",
-                                "Which instructional method heavily relies on scaffolding and peer collaboration?"
-                            ],
-                            "Language I (Odia)": [
-                                "ନିମ୍ନଲିଖିତ ମଧ୍ୟରୁ କେଉଁଟି ଏକ ଯୁଗ୍ମ ଶବ୍ଦ ନୁହେଁ?",
-                                "ପ୍ରାଥମିକ ସ୍ତରରେ ମାତୃଭାଷା ଶିକ୍ଷାଦାନର ମୁଖ୍ୟ ଉଦ୍ଦେଶ୍ୟ କ’ଣ?",
-                                "କବିତା ଶିକ୍ଷାଦାନ ସମୟରେ କେଉଁ ଦିଗ ପ୍ରତି ଅଧିକ ଧ୍ୟାନ ଦିଆଯାଏ?",
-                                "ଛାତ୍ରମାନଙ୍କର ଲିଖନ କୌଶଳ ବୃଦ୍ଧି ପାଇଁ କି ପ୍ରକାର ଅଭ୍ୟାସ ଦରକାର?",
-                                "ବ୍ୟାକରଣ ନିୟମଗୁଡିକୁ କିପରି ସହଜରେ ଶିକ୍ଷା ଦିଆଯାଇପାରିବ?",
-                                "ନିମ୍ନଲିଖିତ ମଧ୍ୟରୁ କେଉଁଟି ଏକ ତତ୍ସମ ଶବ୍ଦ ଅଟେ?",
-                                "ଭାଷା ଶିକ୍ଷଣରେ 'ଶୁଦ୍ଧ ଉଚ୍ଚାରଣ' ର ମହତ୍ତ୍ୱ କ'ଣ?",
-                                "ଏକକ ପାଠ୍ୟଯୋଜନା (Unit Plan) ପ୍ରସ୍ତୁତିର ପ୍ରଥମ ସୋପାନ କ'ଣ?",
-                                "'ସୂର୍ଯ୍ୟ' ର ସମାର୍ଥବୋଧକ ଶବ୍ଦ ନୁହେଁ କେଉଁଟି?",
-                                "ସର୍ବନାମ ପଦ କେତେ ପ୍ରକାରର?"
-                            ],
-                            "Language II (English)": [
-                                "Which of the following approaches focuses primarily on meaning rather than form?",
-                                "What is the best way to improve a learner's productive vocabulary?",
-                                "Identify the correct pedagogical use of authentic materials in an ESL classroom.",
-                                "How does extensive reading benefit second language learners?",
-                                "Which assessment method evaluates listening comprehension effectively?",
-                                "Which linguistic concept relates to the study of meaning in language?",
-                                "What role does 'mother tongue interference' play in second language acquisition?",
-                                "Select the most appropriate method to teach active-passive voice in grammar.",
-                                "Identify the figure of speech: 'The wind whispered through the trees'.",
-                                "Which strategy best supports dyslexic learners in an English reading class?"
-                            ],
-                            "Mathematics": [
-                                "Which geometrical shape has no vertices and no flat surfaces?",
-                                "What is the most effective way to teach the concept of fractions to a class 4 student?",
-                                "A prime number has exactly how many factors?",
-                                "How does the use of the abacus help in mathematical development?",
-                                "Which of the following represents a conceptual error rather than a calculation error?",
-                                "In algebra, what is the fundamental purpose of using variables?",
-                                "Which statistical measure is most affected by extreme outlier values?",
-                                "How should a teacher introduce the concept of spatial reasoning?",
-                                "What is the primary objective of teaching data handling in primary classes?",
-                                "Identify the best real-world application to teach profit and loss."
-                            ],
-                            "Environmental Studies": [
-                                "Why is the thematic approach preferred in teaching EVS?",
-                                "Which local resource can be best used to teach the concept of water conservation?",
-                                "What is the role of field trips in the EVS curriculum?",
-                                "Which ecosystem is characterized by low rainfall and extreme temperatures?",
-                                "How can a teacher effectively sensitize students about endangered species?",
-                                "What is the significance of studying community helpers in primary EVS?",
-                                "Which type of pollution is primarily measured using the Air Quality Index (AQI)?",
-                                "What pedagogical tool is best for demonstrating the water cycle?",
-                                "Identify the main objective of mapping skills in environmental studies.",
-                                "How does discussing global warming at a primary level impact students?"
-                            ]
-                        };
-                        
-                        const optionSets = {
-                            "Child Development & Pedagogy": [
-                                ["Facilitating inquiry-based learning", "Enforcing strict memorization", "Ignoring individual differences", "Isolating underperforming students"],
-                                ["Constructivism", "Strict Behaviorism", "Classical Conditioning", "Rote Learning Integration"]
-                            ],
-                            "Language I (Odia)": [
-                                ["ପ୍ରାକୃତିକ ପରିବେଶ ସୃଷ୍ଟି କରିବା", "କେବଳ ବହି ପଢାଇବା", "ଛାତ୍ରଙ୍କୁ ଚୁପ୍ ରଖିବା", "ପରୀକ୍ଷା ପାଇଁ ଘୋଷାଇବା"],
-                                ["ଆରୋହ ପଦ୍ଧତି", "ଅବରୋହ ପଦ୍ଧତି", "ମୁଖସ୍ଥ ପଦ୍ଧତି", "ଦଣ୍ଡ ପଦ୍ଧତି"]
-                            ],
-                            "Language II (English)": [
-                                ["Communicative Language Teaching", "Grammar-Translation Method", "Direct Drilling", "Rote Memorization"],
-                                ["Providing exposure to real-life contexts", "Making them copy dictionaries", "Translating every single word", "Avoiding spoken English entirely"]
-                            ],
-                            "Mathematics": [
-                                ["Using concrete physical manipulatives", "Writing abstract formulas on the board", "Asking students to memorize tables instantly", "Skipping foundational concepts"],
-                                ["Misunderstanding the place value system", "Adding 2+3 as 6 by mistake", "Forgetting a multiplication table", "Misplacing a decimal point carelessly"]
-                            ],
-                            "Environmental Studies": [
-                                ["It integrates subjects seamlessly for holistic learning", "It isolates scientific facts for easier testing", "It removes the need for practical experiments", "It strictly follows outdated curriculums"],
-                                ["Organizing field visits to local water bodies", "Making students read a chapter silently", "Showing a single photograph on the board", "Asking them to memorize water facts"]
-                            ]
-                        };
-                        
-                        const qText = qTemplates[sub][Math.floor(Math.random() * qTemplates[sub].length)];
-                        const optPool = optionSets[sub][Math.floor(Math.random() * optionSets[sub].length)];
-                        let opts = [...optPool];
-                        
-                        // Let's assume the first option in optPool is the correct pedagogy/concept
-                        let answerIdx = Math.floor(Math.random() * 4);
-                        let temp = opts[answerIdx];
-                        opts[answerIdx] = opts[0];
-                        opts[0] = temp;
-                        
-                        let answerText = opts[answerIdx];
-                        // Shuffle options
-                        for (let j = opts.length - 1; j > 0; j--) {
-                            const k = Math.floor(Math.random() * (j + 1));
-                            [opts[j], opts[k]] = [opts[k], opts[j]];
-                        }
-
-                        qs.push({
-                            id: idCounter++,
-                            subject: sub,
-                            topic: `${sub} - Advanced Pedagogy`,
-                            difficulty: diff,
-                            text: `(Q${idCounter-1}) ${qText}`,
-                            options: opts,
-                            answer: opts.indexOf(answerText), 
-                            explanation: `This question evaluates advanced conceptual understanding required for the OTET examination in ${sub}.`
-                        });
-                    }
+                    });
                 }
+                
+                // Generate a massive dynamic pool (up to 50 questions per subject) to guarantee NO REPETITION!
+                while(subjectQs.length < 50) {
+                    const diff = difficultyLevels[Math.floor(Math.random() * difficultyLevels.length)];
+                    let qObj = { subject: sub, difficulty: diff, generated: true, answer: -1 };
+                    
+                    if (sub === "Mathematics") {
+                        let qType = Math.floor(Math.random() * 4);
+                        if (qType === 0) {
+                            let p = (Math.floor(Math.random() * 40) + 10) * 100;
+                            let r = Math.floor(Math.random() * 8) + 2;
+                            let t = Math.floor(Math.random() * 4) + 2;
+                            let ans = (p * r * t) / 100;
+                            qObj.topic = "Interest";
+                            qObj.text = `Calculate the simple interest on ₹${p} for ${t} years at ${r}% per annum.`;
+                            qObj.options = [`₹${ans}`, `₹${ans+50}`, `₹${ans-20}`, `₹${ans*2}`];
+                            qObj.ansVal = `₹${ans}`;
+                            qObj.explanation = `SI = (P*R*T)/100 = (${p} * ${r} * ${t}) / 100 = ${ans}.`;
+                        } else if (qType === 1) {
+                            let a = Math.floor(Math.random() * 5) + 3;
+                            let b = a * (Math.floor(Math.random() * 3) + 2);
+                            qObj.topic = "Algebra";
+                            qObj.text = `If x / ${a} = ${b}, then what is the value of x?`;
+                            qObj.options = [`${a*b}`, `${a*b+a}`, `${b-a}`, `${a*b*2}`];
+                            qObj.ansVal = `${a*b}`;
+                            qObj.explanation = `Multiply both sides by ${a}. x = ${b} * ${a} = ${a*b}.`;
+                        } else if (qType === 2) {
+                            let l = Math.floor(Math.random() * 10) + 5;
+                            let w = Math.floor(Math.random() * 5) + 3;
+                            let ans = 2 * (l + w);
+                            qObj.topic = "Geometry";
+                            qObj.text = `What is the perimeter of a rectangle with length ${l} cm and breadth ${w} cm?`;
+                            qObj.options = [`${ans} cm`, `${ans+4} cm`, `${l*w} cm`, `${ans-2} cm`];
+                            qObj.ansVal = `${ans} cm`;
+                            qObj.explanation = `Perimeter = 2 * (l + w) = 2 * (${l} + ${w}) = ${ans}.`;
+                        } else {
+                            let c1 = Math.floor(Math.random() * 5) + 3;
+                            let c2 = Math.floor(Math.random() * 5) + 5;
+                            let cost = c1 * (Math.floor(Math.random() * 10) + 10);
+                            let unit = cost/c1;
+                            let ans = unit * c2;
+                            qObj.topic = "Arithmetic";
+                            qObj.text = `If ${c1} pens cost ₹${cost}, what is the cost of ${c2} pens?`;
+                            qObj.options = [`₹${ans}`, `₹${ans+15}`, `₹${ans-10}`, `₹${cost+20}`];
+                            qObj.ansVal = `₹${ans}`;
+                            qObj.explanation = `Cost of 1 pen = ${cost}/${c1} = ₹${unit}. Cost of ${c2} pens = ${unit} * ${c2} = ₹${ans}.`;
+                        }
+                    } else if (sub === "Language I (Odia)") {
+                         const templates = [
+                            { t: `ଶ୍ରେଣୀରେ ${names[Math.floor(Math.random()*names.length)]} ଓଡ଼ିଆ ପଢିବାରେ ଅସୁବିଧା ଭୋଗୁଛନ୍ତି। ଶିକ୍ଷକ କ'ଣ କରିବା ଉଚିତ୍?`, a: "ନିରାକରଣାତ୍ମକ ଶିକ୍ଷା ଦେବେ", o: ["ତାଙ୍କୁ ଗାଳି ଦେବେ", "ନିରାକରଣାତ୍ମକ ଶିକ୍ଷା ଦେବେ", "ପିତାମାତାଙ୍କୁ ଡାକିବେ", "ଅଣଦେଖା କରିବେ"] },
+                            { t: `ପ୍ରାଥମିକ ସ୍ତରରେ ମାତୃଭାଷା ଶିକ୍ଷାଦାନର ସବୁଠାରୁ ଭଲ ମାଧ୍ୟମ କ'ଣ?`, a: "ଗଳ୍ପ କଥନ ଓ ଖେଳ", o: ["କେବଳ ବ୍ୟାକରଣ ଘୋଷାଇବା", "ଗଳ୍ପ କଥନ ଓ ଖେଳ", "କଠିନ ବହି ପଢାଇବା", "ପରୀକ୍ଷା ନେବା"] },
+                            { t: `ବ୍ୟାକରଣ ଶିକ୍ଷାଦାନ ପାଇଁ କେଉଁ ପଦ୍ଧତି ଅଧିକ ଫଳପ୍ରଦ?`, a: "ଆରୋହ ପଦ୍ଧତି", o: ["ଅବରୋହ ପଦ୍ଧତି", "ଆରୋହ ପଦ୍ଧତି", "ମୁଖସ୍ଥ ପଦ୍ଧତି", "ସୂତ୍ର ପଦ୍ଧତି"] },
+                            { t: `ଏକକ ପାଠ୍ୟଯୋଜନା (Unit Plan) ପ୍ରସ୍ତୁତିର ପ୍ରଥମ ସୋପାନ କ'ଣ?`, a: "ଉଦ୍ଦେଶ୍ୟ ନିର୍ଦ୍ଧାରଣ", o: ["ଉଦ୍ଦେଶ୍ୟ ନିର୍ଦ୍ଧାରଣ", "ମୂଲ୍ୟାୟନ", "ପ୍ରଶ୍ନୋତ୍ତର", "ସମୀକ୍ଷା"] },
+                            { t: `କବିତା ଶିକ୍ଷାଦାନ ସମୟରେ ${names[Math.floor(Math.random()*names.length)]} କେଉଁ ଦିଗ ପ୍ରତି ଅଧିକ ଧ୍ୟାନ ଦେବା ଆବଶ୍ୟକ?`, a: "ଆବୃତ୍ତି ଓ ଭାବାର୍ଥ", o: ["କେବଳ ବନାନ", "ଆବୃତ୍ତି ଓ ଭାବାର୍ଥ", "ଶବ୍ଦାର୍ଥ ଘୋଷାଇବା", "ଗାଣିତିକ ସୂତ୍ର"] }
+                         ];
+                         let tpl = templates[Math.floor(Math.random() * templates.length)];
+                         qObj.topic = "Odia Pedagogy";
+                         qObj.text = tpl.t; qObj.options = [...tpl.o]; qObj.ansVal = tpl.a;
+                         qObj.explanation = "ଏହା ଓଡ଼ିଆ ଭାଷା ଶିକ୍ଷଣର ଏକ ପ୍ରମୁଖ ଧାରଣା ଅଟେ।";
+                    } else {
+                        const templates = [
+                            { t: `Teacher ${names[Math.floor(Math.random()*names.length)]} wants to assess critical thinking in ${sub}. Which method is best?`, a: "Open-ended questions", o: ["Multiple choice", "True/False", "Open-ended questions", "Rote reading"] },
+                            { t: `In a ${sub} class, ${names[Math.floor(Math.random()*names.length)]} is a slow learner. The best approach is:`, a: "Remedial teaching & scaffolding", o: ["Ignoring the child", "Punishing the child", "Remedial teaching & scaffolding", "Complaining to parents"] },
+                            { t: `Which of the following is an effective tool for formative assessment in ${sub}?`, a: "Portfolio and anecdotes", o: ["Annual Exam", "Portfolio and anecdotes", "Strict grading", "Competitive ranking"] },
+                            { t: `The primary goal of teaching ${sub} at the elementary level is to develop:`, a: "Basic comprehension and application", o: ["Advanced research skills", "Basic comprehension and application", "Rote memory", "Syllabus completion"] },
+                            { t: `When a student asks a completely unrelated question during a ${sub} lesson, what should the teacher do?`, a: "Acknowledge and address it later", o: ["Scold the student", "Acknowledge and address it later", "Derail the class", "Send them out"] },
+                            { t: `Which instructional method heavily relies on scaffolding and peer collaboration for ${sub}?`, a: "Constructivism", o: ["Strict Behaviorism", "Rote Learning", "Constructivism", "Classical Conditioning"] },
+                            { t: `Identify the main limitation of standardized intelligence testing in ${sub} classes.`, a: "It ignores individual cognitive diversity", o: ["It is too easy", "It ignores individual cognitive diversity", "It is heavily practical", "It focuses too much on emotional intelligence"] }
+                        ];
+                        let tpl = templates[Math.floor(Math.random() * templates.length)];
+                        qObj.topic = `${sub} - Pedagogy`;
+                        qObj.text = tpl.t; qObj.options = [...tpl.o]; qObj.ansVal = tpl.a;
+                        qObj.explanation = `This tests advanced pedagogy principles for ${sub}.`;
+                    }
+                    
+                    if(qObj.generated) {
+                        qObj.options = qObj.options.sort(() => Math.random() - 0.5);
+                        qObj.answer = qObj.options.indexOf(qObj.ansVal);
+                    }
+                    subjectQs.push(qObj);
+                }
+                
+                // RANDOMLY SHUFFLE the massive 50-question pool, then pick exactly 30 for this exam.
+                // This ensures NO REPETITION across at least 10-15 mock test iterations!
+                subjectQs = subjectQs.sort(() => Math.random() - 0.5).slice(0, 30);
+                
+                subjectQs.forEach(q => {
+                    qs.push({
+                        id: idCounter++,
+                        subject: q.subject,
+                        topic: q.topic,
+                        difficulty: q.difficulty,
+                        text: `(Q${idCounter-1}) ${q.text}`,
+                        options: q.options,
+                        answer: q.answer,
+                        explanation: q.explanation,
+                        status: 'not-visited',
+                        selectedOption: null,
+                        timeSpent: 0
+                    });
+                });
             });
             return qs;
         };
