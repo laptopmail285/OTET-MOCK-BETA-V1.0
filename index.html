@@ -1,1 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTET Master | Advanced Mock Test Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Tailwind Config for Custom Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .omr-bubble {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        .omr-bubble:hover { border-color: #94a3b8; }
+        .omr-bubble.unattempted { background-color: #ffffff; }
+        .omr-bubble.attempted { background-color: #22c55e; border-color: #22c55e; color: white; }
+        .omr-bubble.marked { background-color: #f59e0b; border-color: #f59e0b; color: white; }
+        .omr-bubble.attempted-marked { background-color: #8b5cf6; border-color: #8b5cf6; color: white; }
+        .omr-bubble.active { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); border-color: #3b82f6; }
+
+        .option-card {
+            transition: all 0.2s;
+            border: 2px solid #e2e8f0;
+        }
+        .option-card:hover { border-color: #cbd5e1; background-color: #f8fafc; }
+        .option-card.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .option-card.correct-review { border-color: #22c55e; background-color: #f0fdf4; }
+        .option-card.incorrect-review { border-color: #ef4444; background-color: #fef2f2; }
+
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-graduation-cap text-brand-600 text-2xl mr-3"></i>
+                    <span class="font-bold text-lg sm:text-xl text-slate-800 tracking-tight">OTET Master</span>
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <button onclick="app.showDashboard()" class="text-slate-500 hover:text-brand-600 transition px-3 py-2 rounded-md font-medium text-sm sm:text-base">Dashboard</button>
+                    <div class="h-8 w-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold border border-brand-200">
+                        U
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex overflow-hidden bg-slate-50 relative">
+        
+        <!-- View 1: Dashboard -->
+        <div id="view-dashboard" class="w-full h-full overflow-y-auto fade-in absolute inset-0 z-10 bg-slate-50 pb-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                
+                <!-- Hero Section -->
+                <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h1 class="text-2xl sm:text-3xl font-bold mb-2">Ready to crack OTET 2026?</h1>
+                        <p class="text-brand-100 mb-6 max-w-2xl text-base sm:text-lg">Simulate the exact exam environment, identify your weak points, and get an AI-driven personalized roadmap to ensure your success.</p>
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-4">
+                            <button onclick="app.setupTestModal('paper1')" class="bg-white text-brand-700 hover:bg-brand-50 font-bold py-3 px-6 rounded-lg shadow transition transform hover:-translate-y-0.5 text-center">
+                                Take Paper 1 Mock Test
+                            </button>
+                            <button onclick="app.setupTestModal('paper2')" class="bg-brand-600 border border-brand-400 hover:bg-brand-500 text-white font-bold py-3 px-6 rounded-lg shadow transition transform hover:-translate-y-0.5 text-center">
+                                Take Paper 2 Mock Test
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Decor -->
+                    <i class="fa-solid fa-book-open absolute -right-10 -bottom-10 text-9xl opacity-10 transform -rotate-12 pointer-events-none"></i>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Col: Stats & History -->
+                    <div class="lg:col-span-2 space-y-8">
+                        
+                        <!-- Performance Overview -->
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center"><i class="fa-solid fa-chart-line mr-2 text-brand-500"></i> Performance Overview</h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="glass-card p-5 rounded-xl border-l-4 border-l-brand-500">
+                                    <div class="text-sm text-slate-500 font-medium mb-1">Average Score</div>
+                                    <div class="text-2xl font-bold text-slate-800" id="dash-avg-score">--</div>
+                                </div>
+                                <div class="glass-card p-5 rounded-xl border-l-4 border-l-emerald-500">
+                                    <div class="text-sm text-slate-500 font-medium mb-1">Readiness Level</div>
+                                    <div class="text-2xl font-bold text-slate-800" id="dash-readiness">--</div>
+                                </div>
+                                <div class="glass-card p-5 rounded-xl border-l-4 border-l-purple-500">
+                                    <div class="text-sm text-slate-500 font-medium mb-1">Tests Attempted</div>
+                                    <div id="dash-tests-taken" class="text-2xl font-bold text-slate-800">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center"><i class="fa-solid fa-clock-rotate-left mr-2 text-brand-500"></i> Recent Activity</h2>
+                            <div class="glass-card rounded-xl overflow-hidden" id="dash-history-container">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Col: Recommendations & Goals -->
+                    <div class="space-y-8">
+                        
+                        <!-- AI Recommendations -->
+                        <div class="glass-card rounded-xl p-6 border-t-4 border-t-amber-400">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> Smart Strategy</h3>
+                            <div class="space-y-4" id="dash-recommendations">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Syllabus Progress -->
+                        <div class="glass-card rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">Syllabus Coverage</h3>
+                            <div class="space-y-4" id="dash-syllabus-coverage">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Test Configuration Modal -->
+        <div id="modal-test-config" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+                <div class="bg-brand-600 p-5 text-white flex justify-between items-center">
+                    <h3 class="text-xl font-bold" id="modal-title">Configure Mock Test</h3>
+                    <button onclick="app.closeModal()" class="text-brand-200 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Duration & Mode</label>
+                        <select id="config-duration" class="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-2.5 border bg-white">
+                            <option value="150">Full Length (150 Mins / 150 Qs)</option>
+                            <option value="60">Mini Mock (60 Mins / 60 Qs)</option>
+                            <option value="30">Quick Practice (30 Mins / 30 Qs)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Exam Settings</label>
+                        <div class="flex items-center justify-between p-3 border border-slate-200 rounded-lg bg-slate-50">
+                            <div>
+                                <span class="block text-sm font-semibold text-slate-800">Negative Marking</span>
+                                <span class="block text-xs text-slate-500">OTET standard has NO negative marking.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="config-negative" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                        <div class="flex">
+                            <div class="flex-shrink-0"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i></div>
+                            <div class="ml-3 text-sm text-amber-700">
+                                Ensure you have a stable internet connection. Do not refresh the page once the test begins.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 flex justify-end space-x-3 border-t border-slate-200">
+                    <button onclick="app.closeModal()" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition">Cancel</button>
+                    <button onclick="app.startExam()" class="px-6 py-2 bg-brand-600 text-white font-bold rounded-lg shadow hover:bg-brand-700 transition">Start Exam</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 3: Exam Interface -->
+        <div id="view-exam" class="hidden w-full h-full flex flex-col absolute inset-0 z-20 bg-white">
+            
+            <!-- Exam Header -->
+            <div class="h-14 bg-slate-800 text-white flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-md z-20">
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <div class="font-bold text-base sm:text-lg hidden sm:block" id="exam-title-display">OTET Paper 1</div>
+                    <div class="bg-slate-700 px-3 py-1 rounded text-sm font-mono flex items-center">
+                        <i class="fa-regular fa-clock mr-2 text-brand-300"></i>
+                        <span id="exam-timer">00:00:00</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button onclick="app.pauseExam()" class="text-slate-300 hover:text-white transition px-2" title="Pause"><i class="fa-solid fa-pause"></i></button>
+                    <button onclick="app.confirmSubmit()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 sm:px-4 py-1.5 rounded font-bold text-xs sm:text-sm transition">Submit <span class="hidden sm:inline">Exam</span></button>
+                </div>
+            </div>
+
+            <!-- Exam Body -->
+            <div class="flex flex-grow overflow-hidden relative">
+                
+                <!-- Main Question Area -->
+                <div class="flex-grow flex flex-col relative overflow-hidden transition-all duration-300" id="exam-main-area">
+                    
+                    <!-- Section Tabs -->
+                    <div class="bg-slate-100 border-b border-slate-200 overflow-x-auto whitespace-nowrap flex scrollbar-hide px-2" id="exam-sections">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Question Content -->
+                    <div class="flex-grow overflow-y-auto p-4 sm:p-8 relative">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-lg sm:text-xl font-bold text-slate-800">Question <span id="q-number">1</span></h2>
+                                <div class="flex space-x-2 text-xs sm:text-sm">
+                                    <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded" id="q-difficulty">Medium</span>
+                                    <span class="bg-brand-50 text-brand-600 px-2 py-1 rounded truncate max-w-[100px] sm:max-w-none" id="q-topic">Pedagogy</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-base sm:text-lg text-slate-800 mb-8 font-medium leading-relaxed" id="q-text">
+                                <!-- Question Text -->
+                            </div>
+
+                            <div class="space-y-3 sm:space-y-4" id="q-options">
+                                <!-- Options Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Footer -->
+                    <div class="h-16 sm:h-20 bg-white border-t border-slate-200 flex items-center justify-between px-2 sm:px-8 shrink-0 pb-safe">
+                        <div class="flex space-x-2 sm:space-x-4">
+                            <button onclick="app.markForReview()" class="px-2 sm:px-4 py-2 border border-amber-400 text-amber-600 rounded font-medium hover:bg-amber-50 transition text-xs sm:text-base whitespace-nowrap flex items-center">
+                                <i class="fa-solid fa-star mr-1 sm:mr-2"></i> <span class="hidden sm:inline">Mark for Review</span><span class="sm:hidden">Mark</span>
+                            </button>
+                            <button onclick="app.clearResponse()" class="px-2 sm:px-4 py-2 border border-slate-300 text-slate-600 rounded font-medium hover:bg-slate-50 transition text-xs sm:text-base">
+                                Clear
+                            </button>
+                        </div>
+                        <div class="flex space-x-2 sm:space-x-4">
+                            <button onclick="app.prevQuestion()" class="px-3 sm:px-6 py-2 bg-slate-100 text-slate-700 rounded font-bold hover:bg-slate-200 transition text-xs sm:text-base flex items-center">
+                                <i class="fa-solid fa-chevron-left mr-1 sm:mr-2"></i> Prev
+                            </button>
+                            <button onclick="app.nextQuestion()" class="px-3 sm:px-6 py-2 bg-brand-600 text-white rounded font-bold hover:bg-brand-700 transition shadow-md text-xs sm:text-base flex items-center">
+                                Next <i class="fa-solid fa-chevron-right ml-1 sm:ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Overlay Backdrop -->
+                <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden backdrop-blur-sm" onclick="app.toggleMobileSidebar()"></div>
+
+                <!-- OMR / Navigation Sidebar -->
+                <div class="w-72 bg-slate-50 border-l border-slate-200 flex-col shrink-0 z-40 fixed lg:relative right-0 top-14 bottom-0 lg:top-0 lg:bottom-0 transform translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl lg:shadow-none flex" id="exam-sidebar">
+                    <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center lg:block">
+                        <h3 class="font-bold text-slate-800 mb-0 lg:mb-3">Question Palette</h3>
+                        <button onclick="app.toggleMobileSidebar()" class="lg:hidden text-slate-500 hover:text-slate-800"><i class="fa-solid fa-times text-xl"></i></button>
+                    </div>
+                    <div class="p-4 border-b border-slate-200 bg-white hidden lg:block">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-green-500 mr-2"></div> Answered (<span id="count-ans">0</span>)</div>
+                            <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-red-500 mr-2"></div> Not Answered (<span id="count-not">0</span>)</div>
+                            <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-white border border-slate-300 mr-2"></div> Not Visited (<span id="count-unv">0</span>)</div>
+                            <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-purple-500 mr-2"></div> Marked (<span id="count-mark">0</span>)</div>
+                        </div>
+                    </div>
+                    <!-- Mobile only stats display inline -->
+                    <div class="px-4 py-2 border-b border-slate-200 bg-white flex lg:hidden justify-between text-xs overflow-x-auto">
+                        <span class="text-green-600 font-bold mr-3"><i class="fa-solid fa-check-circle"></i> <span id="count-ans-m">0</span></span>
+                        <span class="text-red-500 font-bold mr-3"><i class="fa-solid fa-circle"></i> <span id="count-not-m">0</span></span>
+                        <span class="text-slate-400 font-bold mr-3"><i class="fa-regular fa-circle"></i> <span id="count-unv-m">0</span></span>
+                        <span class="text-purple-600 font-bold"><i class="fa-solid fa-star"></i> <span id="count-mark-m">0</span></span>
+                    </div>
+
+                    <div class="flex-grow overflow-y-auto p-4 pb-24 lg:pb-4">
+                        <div class="grid grid-cols-5 gap-2" id="omr-grid">
+                            <!-- Bubbles Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Sidebar Toggle Button -->
+                <button onclick="app.toggleMobileSidebar()" class="lg:hidden absolute top-4 right-0 bg-brand-600 text-white px-3 py-2 rounded-l-md shadow-lg z-20 flex items-center">
+                    <i class="fa-solid fa-list-ul mr-2"></i> Palette
+                </button>
+
+            </div>
+        </div>
+
+        <!-- View 4: Analytics Dashboard -->
+        <div id="view-analytics" class="hidden w-full h-full overflow-y-auto absolute inset-0 z-30 bg-slate-50 pb-12">
+            
+            <!-- Header -->
+            <div class="bg-slate-900 text-white pt-10 pb-20 px-4 sm:px-6 lg:px-8">
+                <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-center md:text-left">
+                        <h1 class="text-2xl sm:text-3xl font-bold mb-2">Performance Analysis Report</h1>
+                        <p class="text-slate-400" id="an-exam-name">OTET Paper 1 - Full Mock Test</p>
+                    </div>
+                    <div class="mt-6 md:mt-0 flex space-x-3 w-full md:w-auto">
+                        <button onclick="app.showDashboard()" class="flex-1 md:flex-none px-4 sm:px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition border border-slate-700 text-sm sm:text-base">Home</button>
+                        <button onclick="app.scrollToSolutions()" class="flex-1 md:flex-none px-4 sm:px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold shadow-lg transition text-sm sm:text-base whitespace-nowrap">View Solutions</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Container (Pulled up over header) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <!-- Score -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-b-4 border-brand-500">
+                        <div class="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 truncate">Total Score</div>
+                        <div class="flex items-baseline">
+                            <span class="text-3xl sm:text-4xl font-black text-slate-800" id="an-score">0</span>
+                            <span class="text-sm sm:text-lg text-slate-500 ml-1">/ <span id="an-total-marks">150</span></span>
+                        </div>
+                        <div class="mt-2 text-xs sm:text-sm text-emerald-600 font-medium flex items-center truncate">
+                            <i class="fa-solid fa-trophy mr-1 hidden sm:inline"></i> <span id="an-percentile">Top 15%</span>
+                        </div>
+                    </div>
+                    <!-- Accuracy -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-b-4 border-emerald-500">
+                        <div class="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 truncate">Accuracy</div>
+                        <div class="text-3xl sm:text-4xl font-black text-slate-800" id="an-accuracy">0%</div>
+                        <div class="w-full bg-slate-100 rounded-full h-1 sm:h-1.5 mt-2 sm:mt-3"><div class="bg-emerald-500 h-1 sm:h-1.5 rounded-full" id="an-acc-bar" style="width: 0%"></div></div>
+                    </div>
+                    <!-- Attempt Rate -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-b-4 border-purple-500">
+                        <div class="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 truncate">Attempted</div>
+                        <div class="text-3xl sm:text-4xl font-black text-slate-800" id="an-attempted">0</div>
+                        <div class="mt-2 text-xs sm:text-sm text-slate-500 truncate">Out of <span id="an-total-qs">150</span></div>
+                    </div>
+                    <!-- Readiness -->
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-b-4 border-orange-500">
+                        <div class="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 truncate">Readiness</div>
+                        <div class="text-3xl sm:text-4xl font-black text-slate-800 flex items-center">
+                            <span id="an-readiness">0</span><span class="text-sm sm:text-lg text-slate-400 ml-1">/100</span>
+                        </div>
+                        <div class="mt-2 text-xs sm:text-sm font-medium truncate" id="an-readiness-text">Analyzing...</div>
+                    </div>
+                </div>
+
+                <!-- Detailed Time & Strategy Analysis -->
+                <div class="glass-card rounded-xl shadow-sm p-5 sm:p-6 mt-6 sm:mt-8">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 sm:mb-6 border-b border-slate-100 pb-2 flex items-center"><i class="fa-solid fa-stopwatch text-brand-500 mr-2"></i> Time & Speed Analysis</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-100">
+                            <div class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase mb-1">Total Time Taken</div>
+                            <div class="text-xl sm:text-2xl font-bold text-slate-800" id="an-total-time">0m 0s</div>
+                        </div>
+                        <div class="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-100">
+                            <div class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase mb-1">Avg. Time/Question</div>
+                            <div class="text-xl sm:text-2xl font-bold text-slate-800" id="an-avg-time">0s</div>
+                        </div>
+                        <div class="p-3 sm:p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                            <div class="text-[10px] sm:text-xs text-emerald-600 font-semibold uppercase mb-1">Time on Correct</div>
+                            <div class="text-xl sm:text-2xl font-bold text-emerald-700" id="an-avg-correct-time">0s</div>
+                        </div>
+                        <div class="p-3 sm:p-4 bg-rose-50 rounded-lg border border-rose-100">
+                            <div class="text-[10px] sm:text-xs text-rose-600 font-semibold uppercase mb-1">Time on Incorrect</div>
+                            <div class="text-xl sm:text-2xl font-bold text-rose-700" id="an-avg-incorrect-time">0s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-6 sm:mt-8">
+                    
+                    <!-- Radar Chart (Subject Mastery) -->
+                    <div class="glass-card rounded-xl shadow-sm p-4 sm:p-6 lg:col-span-2">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 sm:mb-6 border-b border-slate-100 pb-2">Subject Mastery Analysis</h3>
+                        <div class="h-64 sm:h-80 w-full flex justify-center relative">
+                            <canvas id="chart-radar"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Doughnut Chart (Attempt Breakdown) -->
+                    <div class="glass-card rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 sm:mb-6 border-b border-slate-100 pb-2">Attempt Breakdown</h3>
+                        <div class="h-48 sm:h-64 w-full relative flex justify-center">
+                            <canvas id="chart-doughnut"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none mt-2">
+                                <span class="text-2xl sm:text-3xl font-black text-slate-800" id="an-donut-center">0</span>
+                                <span class="text-[10px] sm:text-xs text-slate-500 font-medium uppercase">Attempted</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 space-y-2 text-xs sm:text-sm">
+                            <div class="flex justify-between items-center"><span class="flex items-center"><div class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div> Correct</span><span class="font-bold" id="an-count-correct">0</span></div>
+                            <div class="flex justify-between items-center"><span class="flex items-center"><div class="w-3 h-3 rounded-full bg-rose-500 mr-2"></div> Incorrect</span><span class="font-bold" id="an-count-incorrect">0</span></div>
+                            <div class="flex justify-between items-center"><span class="flex items-center"><div class="w-3 h-3 rounded-full bg-slate-300 mr-2"></div> Unattempted</span><span class="font-bold" id="an-count-skipped">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Insights & Weakness Detection -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-6 sm:mt-8">
+                    
+                    <!-- Weaknesses -->
+                    <div class="glass-card rounded-xl shadow-sm p-5 sm:p-6 border-t-4 border-t-rose-500">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><i class="fa-solid fa-magnifying-glass-chart text-rose-500 mr-2"></i> Areas of Improvement</h3>
+                        <ul class="space-y-4" id="an-weaknesses">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Strengths -->
+                    <div class="glass-card rounded-xl shadow-sm p-5 sm:p-6 border-t-4 border-t-emerald-500">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><i class="fa-solid fa-dumbbell text-emerald-500 mr-2"></i> Core Strengths</h3>
+                        <ul class="space-y-4" id="an-strengths">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Strategic Recommendations -->
+                <div class="glass-card rounded-xl shadow-sm p-5 sm:p-6 mt-6 sm:mt-8 bg-gradient-to-br from-brand-900 to-slate-900 text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fa-solid fa-robot text-brand-300 mr-2"></i> AI Action Plan</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6" id="an-action-plan">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-brain absolute right-[-5%] top-[-10%] text-9xl opacity-5 transform rotate-12 pointer-events-none"></i>
+                </div>
+
+                <!-- Detailed Solutions Section -->
+                <div id="solutions-section" class="mt-10 sm:mt-12 mb-12">
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6">Question-by-Question Analysis</h3>
+                    
+                    <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-4 overflow-x-auto scrollbar-hide">
+                        <button class="filter-btn active px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-slate-800 text-white whitespace-nowrap" data-filter="all">All</button>
+                        <button class="filter-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap" data-filter="incorrect">Incorrect</button>
+                        <button class="filter-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap" data-filter="unattempted">Unattempted</button>
+                        <button class="filter-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap" data-filter="correct">Correct</button>
+                    </div>
+
+                    <div class="space-y-4 sm:space-y-6" id="an-solutions-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Custom Confirmation Modal -->
+        <div id="modal-confirm" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden fade-in p-6 text-center">
+                <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-question text-2xl text-amber-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Submit Exam?</h3>
+                <p class="text-slate-500 text-sm mb-6" id="confirm-text">You still have time left. Are you sure you want to submit?</p>
+                <div class="flex space-x-3 justify-center">
+                    <button onclick="document.getElementById('modal-confirm').classList.add('hidden')" class="px-4 py-2 border border-slate-300 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition w-full">Cancel</button>
+                    <button onclick="app.submitExam()" class="px-4 py-2 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 transition shadow w-full">Yes, Submit</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        /**
+         * OTET Mock Exam Application Logic
+         * Architecture: Single File SPA, In-Memory State (Session), Chart.js Integration
+         */
+
+        // --- 1. Question Database (Realistic OTET Syllabus) ---
+        const questionBank = [
+            // CDP (Child Development & Pedagogy)
+            { id: 1, paper: "both", subject: "CDP", topic: "Piaget's Theory", difficulty: "Medium", text: "According to Jean Piaget, during which stage does a child begin to use language and think symbolically, but lacks logical reasoning?", options: ["Sensorimotor Stage", "Preoperational Stage", "Concrete Operational Stage", "Formal Operational Stage"], answer: 1, explanation: "In the preoperational stage (ages 2-7), children begin to engage in symbolic play and learn to manipulate symbols, but they do not yet understand concrete logic." },
+            { id: 2, paper: "both", subject: "CDP", topic: "Inclusive Education", difficulty: "Hard", text: "Inclusive Education implies that:", options: ["Disabled students should be taught in special schools.", "All children, regardless of physical, intellectual, social, or emotional conditions, should be accommodated in regular schools.", "Only children with mild disabilities are integrated.", "Separate curriculum should be provided for marginalized groups."], answer: 1, explanation: "Inclusive education is about the right of every child, regardless of abilities or disabilities, to attend regular schools and receive quality education." },
+            { id: 3, paper: "both", subject: "CDP", topic: "Vygotsky", difficulty: "Medium", text: "The concept of 'Zone of Proximal Development' (ZPD) was introduced by:", options: ["B.F. Skinner", "Jean Piaget", "Lev Vygotsky", "Lawrence Kohlberg"], answer: 2, explanation: "ZPD is a key concept in Lev Vygotsky's theory of learning and development, referring to the space between what a learner can do independently and what they can do with adult guidance." },
+            { id: 4, paper: "both", subject: "CDP", topic: "Assessment", difficulty: "Easy", text: "Which of the following is an example of formative assessment?", options: ["Annual Examination", "Board Examination", "Weekly Quizzes and Class Discussions", "Half-yearly Examination"], answer: 2, explanation: "Formative assessments occur during the learning process to monitor student learning and provide ongoing feedback, unlike summative assessments which evaluate learning at the end." },
+            
+            // Language I (English Pedagogy & Grammar)
+            { id: 5, paper: "both", subject: "Language I", topic: "Pedagogy", difficulty: "Medium", text: "Which of the following approaches emphasizes the functional use of language rather than structural rules?", options: ["Grammar-Translation Method", "Direct Method", "Communicative Language Teaching", "Structural Approach"], answer: 2, explanation: "Communicative Language Teaching (CLT) emphasizes interaction as both the means and the ultimate goal of study, focusing on functional use over strict grammar rules." },
+            { id: 6, paper: "both", subject: "Language I", topic: "Grammar", difficulty: "Easy", text: "Choose the correct preposition: 'She has been living in this city ____ ten years.'", options: ["since", "for", "from", "during"], answer: 1, explanation: "We use 'for' when indicating a period of time (duration), while 'since' is used for a specific starting point." },
+            { id: 7, paper: "both", subject: "Language I", topic: "Language Skills", difficulty: "Medium", text: "Skimming a reading text means:", options: ["Reading slowly to understand every word.", "Reading rapidly to get the main idea or gist.", "Reading to locate specific information.", "Reading aloud for pronunciation practice."], answer: 1, explanation: "Skimming is a fast reading technique used to identify the main ideas of a text. Scanning is for locating specific information." },
+            
+            // Mathematics (Content & Pedagogy)
+            { id: 8, paper: "paper1", subject: "Mathematics", topic: "Number System", difficulty: "Medium", text: "What is the place value of 5 in the number 3,45,678?", options: ["500", "5,000", "50,000", "5"], answer: 1, explanation: "The digit 5 is in the thousands place, so its place value is 5 * 1000 = 5,000." },
+            { id: 9, paper: "both", subject: "Mathematics", topic: "Math Pedagogy", difficulty: "Hard", text: "Which of the following is the most appropriate strategy for teaching the concept of fractions to primary school children?", options: ["Writing fractions on the blackboard and explaining.", "Using abstract mathematical formulas.", "Using concrete materials like paper folding, circular discs, and fraction strips.", "Giving a large number of drill exercises."], answer: 2, explanation: "Primary children are usually in the concrete operational stage. Using manipulatives and concrete materials helps them internalize abstract mathematical concepts like fractions." },
+            { id: 10, paper: "paper2", subject: "Mathematics", topic: "Geometry", difficulty: "Hard", text: "If the radius of a circle is doubled, its area becomes:", options: ["Double", "Triple", "Four times", "Eight times"], answer: 2, explanation: "Area of a circle is πr². If radius is 2r, new Area = π(2r)² = 4πr², which is four times the original area." },
+            
+            // Environmental Studies (EVS) - Paper 1
+            { id: 11, paper: "paper1", subject: "EVS", topic: "Ecosystem", difficulty: "Easy", text: "The primary source of energy for most ecosystems on Earth is:", options: ["The Moon", "The Sun", "Geothermal Energy", "Wind"], answer: 1, explanation: "The sun provides the initial energy that producers (plants) convert into food via photosynthesis, driving the entire food web." },
+            { id: 12, paper: "paper1", subject: "EVS", topic: "EVS Pedagogy", difficulty: "Medium", text: "The primary objective of teaching EVS at the primary level is to:", options: ["Memorize facts about the environment.", "Develop a deep understanding of pure science.", "Link classroom learning to life outside the school.", "Prepare students for higher-level environmental engineering."], answer: 2, explanation: "NCF 2005 emphasizes that EVS should help children connect their classroom learning to their daily life experiences and the world outside." },
+            { id: 13, paper: "paper1", subject: "EVS", topic: "Nutrition", difficulty: "Medium", text: "Deficiency of Vitamin C causes:", options: ["Night Blindness", "Scurvy", "Rickets", "Beriberi"], answer: 1, explanation: "Vitamin C deficiency causes scurvy. Night blindness is Vitamin A, Rickets is Vitamin D, and Beriberi is Vitamin B1." },
+
+            // Science - Paper 2
+            { id: 14, paper: "paper2", subject: "Science", topic: "Physics", difficulty: "Medium", text: "Which of the following is an example of a non-contact force?", options: ["Frictional force", "Muscular force", "Magnetic force", "Tension force"], answer: 2, explanation: "Magnetic, gravitational, and electrostatic forces can act from a distance and are therefore non-contact forces." },
+            { id: 15, paper: "paper2", subject: "Science", topic: "Science Pedagogy", difficulty: "Hard", text: "The 'Inquiry Approach' in science teaching primarily focuses on:", options: ["Teacher providing all the answers directly.", "Rote memorization of scientific laws.", "Students asking questions, investigating, and discovering answers.", "Reading extensively from the textbook."], answer: 2, explanation: "Inquiry-based learning emphasizes the student's role in the learning process, asking them to explore the material, ask questions, and share ideas." },
+            
+            // Social Studies - Paper 2
+            { id: 16, paper: "paper2", subject: "Social Studies", topic: "History", difficulty: "Medium", text: "Who was the founder of the Maurya Empire?", options: ["Ashoka", "Chandragupta Maurya", "Bindusara", "Harsha"], answer: 1, explanation: "Chandragupta Maurya founded the Maurya Empire in ancient India, with the help of his mentor Chanakya." },
+            { id: 17, paper: "paper2", subject: "Social Studies", topic: "Social Science Pedagogy", difficulty: "Hard", text: "A teacher wants to teach 'Elections in India'. Which is the best pedagogical method?", options: ["Dictating notes from a guidebook.", "Organizing a mock election in the classroom.", "Asking students to memorize the Election Commission's duties.", "Showing a documentary without discussion."], answer: 1, explanation: "Experiential learning, like conducting a mock election, allows students to understand the complex democratic process practically and effectively." }
+        ];
+
+        // --- 2. Application State Management ---
+        const app = {
+            state: {
+                view: 'dashboard',
+                history: [], // Clean slate by default!
+                currentExam: null,
+                charts: { radar: null, doughnut: null }
+            },
+
+            // --- Initialization ---
+            init() {
+                this.state.history = []; // Initialize empty to provide a clear interface
+                this.showDashboard();
+                this.setupEventListeners();
+            },
+
+            setupEventListeners() {
+                // Filter buttons in analytics solutions view
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-btn').forEach(b => {
+                            b.classList.remove('active', 'bg-slate-800', 'text-white');
+                            b.classList.add('bg-slate-100', 'text-slate-600');
+                        });
+                        e.target.classList.remove('bg-slate-100', 'text-slate-600');
+                        e.target.classList.add('active', 'bg-slate-800', 'text-white');
+                        this.filterSolutions(e.target.dataset.filter);
+                    });
+                });
+            },
+
+            // --- View Routing ---
+            switchView(viewId) {
+                ['view-dashboard', 'view-exam', 'view-analytics'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById('view-' + viewId).classList.remove('hidden');
+                this.state.view = viewId;
+                window.scrollTo(0,0);
+            },
+
+            showDashboard() {
+                this.switchView('dashboard');
+                this.updateDashboardStats();
+            },
+
+            // --- Dashboard Logic ---
+            updateDashboardStats() {
+                const histCount = this.state.history.length;
+                document.getElementById('dash-tests-taken').innerText = histCount;
+                
+                const histContainer = document.getElementById('dash-history-container');
+                const recContainer = document.getElementById('dash-recommendations');
+                const sylContainer = document.getElementById('dash-syllabus-coverage');
+
+                histContainer.innerHTML = '';
+                
+                if (histCount === 0) {
+                    // Empty States
+                    histContainer.innerHTML = '<div class="p-6 text-center text-slate-500 text-sm">No mock tests taken yet. Start one today!</div>';
+                    document.getElementById('dash-avg-score').innerText = '--';
+                    document.getElementById('dash-readiness').innerText = '--';
+
+                    recContainer.innerHTML = `
+                        <div class="text-sm text-slate-500 italic p-4 bg-slate-50 rounded-lg text-center border border-slate-100">
+                            Take your first mock test to unlock AI-driven personalized insights and study strategies.
+                        </div>`;
+
+                    sylContainer.innerHTML = `
+                        <div class="text-sm text-slate-500 italic p-4 bg-slate-50 rounded-lg text-center border border-slate-100">
+                            Syllabus coverage tracking will activate after you complete your first test.
+                        </div>`;
+
+                } else {
+                    // Populate History
+                    const sortedHistory = [...this.state.history].reverse();
+                    sortedHistory.forEach(item => {
+                        const scorePcnt = Math.round((item.score / item.total) * 100);
+                        let colorClass = scorePcnt >= 60 ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50';
+                        
+                        histContainer.innerHTML += `
+                            <div class="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full ${colorClass} flex items-center justify-center font-bold mr-4 text-sm shrink-0">
+                                        ${scorePcnt}%
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-800 text-sm sm:text-base truncate">OTET ${item.paper} Mock</div>
+                                        <div class="text-xs text-slate-500"><i class="fa-regular fa-calendar mr-1"></i> ${item.date}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0 ml-2">
+                                    <div class="font-bold text-slate-800 text-sm sm:text-base">${item.score}/${item.total}</div>
+                                    <div class="text-xs text-slate-500">Score</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    // Calculate Averages
+                    const avgSc = Math.round(this.state.history.reduce((a,b)=>a+(b.score/b.total*100), 0) / histCount);
+                    document.getElementById('dash-avg-score').innerText = `${avgSc}%`;
+                    
+                    const lastReadiness = this.state.history[histCount - 1].readiness;
+                    let rText = "Low";
+                    if(lastReadiness > 80) rText = "High";
+                    else if(lastReadiness > 50) rText = "Medium";
+                    document.getElementById('dash-readiness').innerText = rText;
+
+                    // Dynamic Recommendations & Syllabus based on latest test
+                    const lastTest = this.state.history[histCount - 1];
+                    recContainer.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-500 mt-0.5"><i class="fa-solid fa-chart-simple"></i></div>
+                            <div class="ml-3">
+                                <p class="text-sm font-semibold text-slate-800">Review your latest performance</p>
+                                <p class="text-xs text-slate-500 mt-1">Your last accuracy was ${lastTest.accuracy}%. Review the incorrect questions from the analytics panel to improve.</p>
+                            </div>
+                        </div>
+                    `;
+
+                    sylContainer.innerHTML = `
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium text-slate-700">Latest Test Accuracy Tracker</span>
+                                <span class="text-brand-600 font-bold">${lastTest.accuracy}%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-brand-500 h-2 rounded-full" style="width: ${lastTest.accuracy}%"></div></div>
+                        </div>
+                    `;
+                }
+            },
+
+            // --- Exam Configuration ---
+            setupTestModal(paperType) {
+                this.selectedPaper = paperType;
+                document.getElementById('modal-title').innerText = `Configure OTET ${paperType === 'paper1' ? 'Paper 1' : 'Paper 2'}`;
+                document.getElementById('modal-test-config').classList.remove('hidden');
+            },
+
+            closeModal() {
+                document.getElementById('modal-test-config').classList.add('hidden');
+            },
+
+            // --- Exam Engine ---
+            startExam() {
+                this.closeModal();
+                
+                const durationMins = parseInt(document.getElementById('config-duration').value);
+                const hasNegative = document.getElementById('config-negative').checked;
+                
+                let pool = questionBank.filter(q => q.paper === 'both' || q.paper === this.selectedPaper);
+                let selectedQs = this.shuffleArray([...pool]); 
+                const subjects = [...new Set(selectedQs.map(q => q.subject))];
+                
+                this.state.currentExam = {
+                    paper: this.selectedPaper,
+                    durationSeconds: durationMins * 60,
+                    timeRemaining: durationMins * 60,
+                    negativeMarking: hasNegative,
+                    questions: selectedQs.map(q => ({
+                        ...q,
+                        userAnswer: null,
+                        status: 'unvisited',
+                        timeSpent: 0
+                    })),
+                    subjects: subjects,
+                    currentQIndex: 0,
+                    intervalId: null,
+                    lastTickTime: Date.now()
+                };
+
+                this.state.currentExam.questions[0].status = 'not-answered';
+                
+                this.buildExamUI();
+                this.switchView('exam');
+                
+                document.getElementById('exam-title-display').innerText = `OTET ${this.selectedPaper === 'paper1' ? 'Paper 1' : 'Paper 2'} Mock`;
+                
+                this.state.currentExam.lastTickTime = Date.now();
+                this.state.currentExam.intervalId = setInterval(() => this.examTick(), 1000);
+            },
+
+            buildExamUI() {
+                const secContainer = document.getElementById('exam-sections');
+                secContainer.innerHTML = '';
+                this.state.currentExam.subjects.forEach((sub, idx) => {
+                    const firstIdx = this.state.currentExam.questions.findIndex(q => q.subject === sub);
+                    secContainer.innerHTML += `
+                        <button onclick="app.jumpToQuestion(${firstIdx})" class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition ${idx === 0 ? 'border-brand-600 text-brand-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-800'}">
+                            ${sub}
+                        </button>
+                    `;
+                });
+
+                const grid = document.getElementById('omr-grid');
+                grid.innerHTML = '';
+                this.state.currentExam.questions.forEach((q, idx) => {
+                    grid.innerHTML += `<div onclick="app.jumpToQuestion(${idx}); window.innerWidth < 1024 ? app.toggleMobileSidebar() : null" id="omr-bubble-${idx}" class="omr-bubble unattempted">${idx + 1}</div>`;
+                });
+
+                this.renderCurrentQuestion();
+                this.updatePaletteStats();
+            },
+
+            examTick() {
+                const now = Date.now();
+                const diff = Math.floor((now - this.state.currentExam.lastTickTime) / 1000);
+                this.state.currentExam.lastTickTime = now;
+                
+                this.state.currentExam.timeRemaining -= diff;
+                this.state.currentExam.questions[this.state.currentExam.currentQIndex].timeSpent += diff;
+
+                if (this.state.currentExam.timeRemaining <= 0) {
+                    this.submitExam(true); 
+                    return;
+                }
+
+                const h = Math.floor(this.state.currentExam.timeRemaining / 3600);
+                const m = Math.floor((this.state.currentExam.timeRemaining % 3600) / 60);
+                const s = this.state.currentExam.timeRemaining % 60;
+                document.getElementById('exam-timer').innerText = 
+                    `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if(this.state.currentExam.timeRemaining < 300) {
+                    document.getElementById('exam-timer').classList.add('text-rose-400');
+                }
+            },
+
+            renderCurrentQuestion() {
+                const ex = this.state.currentExam;
+                const q = ex.questions[ex.currentQIndex];
+
+                document.getElementById('q-number').innerText = ex.currentQIndex + 1;
+                document.getElementById('q-difficulty').innerText = q.difficulty;
+                
+                let diffClass = q.difficulty === 'Easy' ? 'text-emerald-600 bg-emerald-50' : 
+                               (q.difficulty === 'Medium' ? 'text-amber-600 bg-amber-50' : 'text-rose-600 bg-rose-50');
+                document.getElementById('q-difficulty').className = `px-2 py-1 rounded text-[10px] sm:text-xs font-bold ${diffClass}`;
+                
+                document.getElementById('q-topic').innerText = q.topic;
+                document.getElementById('q-text').innerText = q.text;
+
+                const optContainer = document.getElementById('q-options');
+                optContainer.innerHTML = '';
+                
+                const labels = ['A', 'B', 'C', 'D'];
+                q.options.forEach((optText, i) => {
+                    const isSelected = q.userAnswer === i;
+                    optContainer.innerHTML += `
+                        <div onclick="app.selectOption(${i})" class="option-card p-3 sm:p-4 rounded-xl cursor-pointer flex items-start ${isSelected ? 'selected' : ''}">
+                            <div class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 ${isSelected ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300 text-slate-500'} flex items-center justify-center font-bold mr-3 sm:mr-4 mt-0.5 sm:mt-0 transition-colors text-xs sm:text-sm">
+                                ${labels[i]}
+                            </div>
+                            <div class="text-slate-700 font-medium text-sm sm:text-base pt-0.5 sm:pt-1">${optText}</div>
+                        </div>
+                    `;
+                });
+
+                document.querySelectorAll('.omr-bubble').forEach(b => b.classList.remove('active'));
+                document.getElementById(`omr-bubble-${ex.currentQIndex}`).classList.add('active');
+
+                const sections = document.getElementById('exam-sections').children;
+                Array.from(sections).forEach(btn => {
+                    if (btn.innerText.trim() === q.subject) {
+                        btn.className = "px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition border-brand-600 text-brand-600 bg-white";
+                    } else {
+                        btn.className = "px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition border-transparent text-slate-500 hover:text-slate-800";
+                    }
+                });
+            },
+
+            selectOption(index) {
+                const ex = this.state.currentExam;
+                const q = ex.questions[ex.currentQIndex];
+                
+                q.userAnswer = index;
+                if (q.status === 'marked' || q.status === 'answered-marked') {
+                    q.status = 'answered-marked';
+                } else {
+                    q.status = 'answered';
+                }
+
+                this.updateBubbleStyle(ex.currentQIndex, q.status);
+                this.renderCurrentQuestion();
+                this.updatePaletteStats();
+            },
+
+            clearResponse() {
+                const ex = this.state.currentExam;
+                const q = ex.questions[ex.currentQIndex];
+                q.userAnswer = null;
+                q.status = q.status.includes('marked') ? 'marked' : 'not-answered';
+                this.updateBubbleStyle(ex.currentQIndex, q.status);
+                this.renderCurrentQuestion();
+                this.updatePaletteStats();
+            },
+
+            markForReview() {
+                const ex = this.state.currentExam;
+                const q = ex.questions[ex.currentQIndex];
+                
+                if (q.status === 'answered') q.status = 'answered-marked';
+                else if (q.status === 'not-answered' || q.status === 'unvisited') q.status = 'marked';
+                else if (q.status === 'answered-marked') q.status = 'answered';
+                else if (q.status === 'marked') q.status = 'not-answered';
+
+                this.updateBubbleStyle(ex.currentQIndex, q.status);
+                this.updatePaletteStats();
+            },
+
+            nextQuestion() {
+                const ex = this.state.currentExam;
+                if (ex.currentQIndex < ex.questions.length - 1) {
+                    this.jumpToQuestion(ex.currentQIndex + 1);
+                }
+            },
+
+            prevQuestion() {
+                const ex = this.state.currentExam;
+                if (ex.currentQIndex > 0) {
+                    this.jumpToQuestion(ex.currentQIndex - 1);
+                }
+            },
+
+            jumpToQuestion(index) {
+                const ex = this.state.currentExam;
+                if (ex.questions[ex.currentQIndex].status === 'unvisited') {
+                    ex.questions[ex.currentQIndex].status = 'not-answered';
+                    this.updateBubbleStyle(ex.currentQIndex, 'not-answered');
+                }
+                
+                ex.currentQIndex = index;
+                
+                if (ex.questions[ex.currentQIndex].status === 'unvisited') {
+                    ex.questions[ex.currentQIndex].status = 'not-answered';
+                    this.updateBubbleStyle(ex.currentQIndex, 'not-answered');
+                }
+
+                this.renderCurrentQuestion();
+                this.updatePaletteStats();
+            },
+
+            updateBubbleStyle(index, status) {
+                const bubble = document.getElementById(`omr-bubble-${index}`);
+                bubble.className = `omr-bubble ${status} ${index === this.state.currentExam.currentQIndex ? 'active' : ''}`;
+            },
+
+            updatePaletteStats() {
+                const q = this.state.currentExam.questions;
+                let ans = 0, not = 0, unv = 0, mark = 0;
+                
+                q.forEach(x => {
+                    if (x.status === 'answered' || x.status === 'answered-marked') ans++;
+                    if (x.status === 'not-answered') not++;
+                    if (x.status === 'unvisited') unv++;
+                    if (x.status === 'marked' || x.status === 'answered-marked') mark++;
+                });
+
+                // Desktop Stats
+                document.getElementById('count-ans').innerText = ans;
+                document.getElementById('count-not').innerText = not;
+                document.getElementById('count-unv').innerText = unv;
+                document.getElementById('count-mark').innerText = mark;
+
+                // Mobile Stats
+                document.getElementById('count-ans-m').innerText = ans;
+                document.getElementById('count-not-m').innerText = not;
+                document.getElementById('count-unv-m').innerText = unv;
+                document.getElementById('count-mark-m').innerText = mark;
+            },
+
+            toggleMobileSidebar() {
+                const sidebar = document.getElementById('exam-sidebar');
+                const backdrop = document.getElementById('sidebar-backdrop');
+                
+                sidebar.classList.toggle('translate-x-full');
+                if (backdrop.classList.contains('hidden')) {
+                    backdrop.classList.remove('hidden');
+                } else {
+                    backdrop.classList.add('hidden');
+                }
+            },
+
+            pauseExam() {
+                alert("Exam Paused. Click OK to resume.");
+                this.state.currentExam.lastTickTime = Date.now();
+            },
+
+            confirmSubmit() {
+                document.getElementById('modal-confirm').classList.remove('hidden');
+            },
+
+            submitExam(autoSubmit = false) {
+                clearInterval(this.state.currentExam.intervalId);
+                document.getElementById('modal-confirm').classList.add('hidden');
+                if(autoSubmit) alert("Time's up! Exam auto-submitted.");
+                
+                this.generateAnalytics();
+            },
+
+            // --- Performance Analysis Engine & New Time Details ---
+            generateAnalytics() {
+                const ex = this.state.currentExam;
+                let correct = 0;
+                let incorrect = 0;
+                let unattempted = 0;
+                
+                let totalTimeSpent = 0;
+                let timeOnCorrect = 0;
+                let timeOnIncorrect = 0;
+                
+                let subjectData = {};
+
+                ex.questions.forEach(q => {
+                    totalTimeSpent += q.timeSpent;
+
+                    if(!subjectData[q.subject]) {
+                        subjectData[q.subject] = { total: 0, correct: 0, time: 0, topics: {} };
+                    }
+                    subjectData[q.subject].total++;
+                    subjectData[q.subject].time += q.timeSpent;
+
+                    if(!subjectData[q.subject].topics[q.topic]) {
+                        subjectData[q.subject].topics[q.topic] = { total: 0, correct: 0 };
+                    }
+                    subjectData[q.subject].topics[q.topic].total++;
+
+                    if (q.userAnswer === null) {
+                        unattempted++;
+                    } else if (q.userAnswer === q.answer) {
+                        correct++;
+                        timeOnCorrect += q.timeSpent;
+                        subjectData[q.subject].correct++;
+                        subjectData[q.subject].topics[q.topic].correct++;
+                    } else {
+                        incorrect++;
+                        timeOnIncorrect += q.timeSpent;
+                    }
+                });
+
+                let score = correct - (ex.negativeMarking ? (incorrect * 0.25) : 0);
+                score = Math.max(0, score);
+                
+                const totalQs = ex.questions.length;
+                const attempted = correct + incorrect;
+                const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+                
+                const completionRate = (attempted / totalQs) * 100;
+                let readinessScore = Math.round((accuracy * 0.6) + (completionRate * 0.4));
+                if (readinessScore < 0) readinessScore = 0;
+
+                // Build detailed time metrics
+                const avgTimeOverall = totalQs > 0 ? Math.round(totalTimeSpent / totalQs) : 0;
+                const avgCorrectTime = correct > 0 ? Math.round(timeOnCorrect / correct) : 0;
+                const avgIncorrectTime = incorrect > 0 ? Math.round(timeOnIncorrect / incorrect) : 0;
+
+                const resultObj = {
+                    date: new Date().toISOString().split('T')[0],
+                    score: score,
+                    total: totalQs,
+                    paper: ex.paper === 'paper1' ? 'Paper 1' : 'Paper 2',
+                    accuracy: accuracy,
+                    readiness: readinessScore
+                };
+                this.state.history.push(resultObj);
+
+                this.buildInsights(subjectData, totalQs, score, accuracy);
+
+                // Populate UI Overviews
+                document.getElementById('an-exam-name').innerText = `OTET ${resultObj.paper} - Performance Report`;
+                document.getElementById('an-score').innerText = score;
+                document.getElementById('an-total-marks').innerText = totalQs;
+                
+                document.getElementById('an-accuracy').innerText = `${accuracy}%`;
+                document.getElementById('an-acc-bar').style.width = `${accuracy}%`;
+                
+                document.getElementById('an-attempted').innerText = attempted;
+                document.getElementById('an-total-qs').innerText = totalQs;
+                
+                document.getElementById('an-readiness').innerText = readinessScore;
+                
+                let rText = "Needs Work";
+                if(readinessScore > 80) rText = "Excellent - Exam Ready!";
+                else if(readinessScore > 60) rText = "Good - Slight Polish Needed";
+                document.getElementById('an-readiness-text').innerText = rText;
+
+                let percentile = Math.min(99, Math.max(1, Math.round(readinessScore * 1.1)));
+                document.getElementById('an-percentile').innerText = `Top ${100-percentile}%`;
+
+                // Populate Time & Strategy Details
+                document.getElementById('an-total-time').innerText = `${Math.floor(totalTimeSpent/60)}m ${totalTimeSpent%60}s`;
+                document.getElementById('an-avg-time').innerText = `${avgTimeOverall}s`;
+                document.getElementById('an-avg-correct-time').innerText = `${avgCorrectTime}s`;
+                document.getElementById('an-avg-incorrect-time').innerText = `${avgIncorrectTime}s`;
+
+                this.renderCharts(subjectData, correct, incorrect, unattempted);
+                this.buildSolutionsList();
+                this.switchView('analytics');
+            },
+
+            buildInsights(subjectData, totalQs, score, accuracy) {
+                let weakTopics = [];
+                let strongTopics = [];
+
+                for (const sub in subjectData) {
+                    const sData = subjectData[sub];
+                    
+                    for (const topic in sData.topics) {
+                        const tData = sData.topics[topic];
+                        if (tData.total >= 1) { 
+                            const tAcc = (tData.correct / tData.total) * 100;
+                            if (tAcc < 50) weakTopics.push({ sub, topic, acc: tAcc });
+                            if (tAcc >= 80) strongTopics.push({ sub, topic, acc: tAcc });
+                        }
+                    }
+                }
+
+                weakTopics.sort((a, b) => a.acc - b.acc);
+                strongTopics.sort((a, b) => b.acc - a.acc);
+
+                const ulWeak = document.getElementById('an-weaknesses');
+                ulWeak.innerHTML = '';
+                if(weakTopics.length === 0) ulWeak.innerHTML = '<li class="text-slate-500 text-sm italic">No significant weak areas detected.</li>';
+                weakTopics.slice(0,3).forEach(w => {
+                    ulWeak.innerHTML += `
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-circle-xmark text-rose-500 mt-1 mr-2"></i>
+                            <div>
+                                <span class="font-semibold text-slate-800 text-sm sm:text-base">${w.topic}</span> <span class="text-[10px] sm:text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded ml-1">${w.sub}</span>
+                                <p class="text-xs text-slate-500 mt-0.5">Accuracy: ${Math.round(w.acc)}%</p>
+                            </div>
+                        </li>
+                    `;
+                });
+
+                const ulStrong = document.getElementById('an-strengths');
+                ulStrong.innerHTML = '';
+                if(strongTopics.length === 0) ulStrong.innerHTML = '<li class="text-slate-500 text-sm italic">Keep practicing to build strong areas.</li>';
+                strongTopics.slice(0,3).forEach(s => {
+                    ulStrong.innerHTML += `
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-circle-check text-emerald-500 mt-1 mr-2"></i>
+                            <div>
+                                <span class="font-semibold text-slate-800 text-sm sm:text-base">${s.topic}</span> <span class="text-[10px] sm:text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded ml-1">${s.sub}</span>
+                                <p class="text-xs text-slate-500 mt-0.5">Accuracy: ${Math.round(s.acc)}%</p>
+                            </div>
+                        </li>
+                    `;
+                });
+
+                const apContainer = document.getElementById('an-action-plan');
+                apContainer.innerHTML = '';
+                
+                let advice1 = accuracy < 60 ? "Focus heavily on conceptual clarity before taking more mocks." : "Your accuracy is solid. Focus on increasing attempt speed.";
+                let advice2 = weakTopics.length > 0 ? `Revise '${weakTopics[0].topic}' immediately.` : "Maintain your revision schedule.";
+                
+                const plans = [
+                    { icon: 'fa-book-open', title: 'Study Focus', text: advice2 },
+                    { icon: 'fa-bolt', title: 'Strategy', text: advice1 },
+                    { icon: 'fa-bullseye', title: 'Next Goal', text: `Aim for ${Math.min(100, accuracy + 10)}% accuracy.` }
+                ];
+
+                plans.forEach(p => {
+                    apContainer.innerHTML += `
+                        <div class="bg-white/10 p-4 rounded-lg border border-white/20 backdrop-blur-sm">
+                            <i class="fa-solid ${p.icon} text-brand-300 mb-2 text-xl"></i>
+                            <h4 class="font-bold text-white text-sm">${p.title}</h4>
+                            <p class="text-brand-100 text-xs mt-1 leading-relaxed">${p.text}</p>
+                        </div>
+                    `;
+                });
+            },
+
+            renderCharts(subjectData, correct, incorrect, unattempted) {
+                if (this.state.charts.radar) this.state.charts.radar.destroy();
+                if (this.state.charts.doughnut) this.state.charts.doughnut.destroy();
+
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.color = '#64748b';
+
+                const labels = Object.keys(subjectData);
+                const dataPoints = labels.map(l => {
+                    let d = subjectData[l];
+                    return d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+                });
+
+                const ctxRadar = document.getElementById('chart-radar').getContext('2d');
+                this.state.charts.radar = new Chart(ctxRadar, {
+                    type: 'radar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Subject Accuracy (%)',
+                            data: dataPoints,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(0,0,0,0.05)' },
+                                grid: { color: 'rgba(0,0,0,0.05)' },
+                                pointLabels: { font: { size: window.innerWidth < 640 ? 10 : 12, weight: '600' }, color: '#334155' },
+                                ticks: { min: 0, max: 100, stepSize: 20, display: false }
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                document.getElementById('an-donut-center').innerText = correct + incorrect;
+                document.getElementById('an-count-correct').innerText = correct;
+                document.getElementById('an-count-incorrect').innerText = incorrect;
+                document.getElementById('an-count-skipped').innerText = unattempted;
+
+                const ctxDoughnut = document.getElementById('chart-doughnut').getContext('2d');
+                this.state.charts.doughnut = new Chart(ctxDoughnut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Correct', 'Incorrect', 'Unattempted'],
+                        datasets: [{
+                            data: [correct, incorrect, unattempted],
+                            backgroundColor: ['#10b981', '#f43f5e', '#e2e8f0'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            },
+
+            buildSolutionsList() {
+                const container = document.getElementById('an-solutions-list');
+                container.innerHTML = '';
+                
+                const labels = ['A', 'B', 'C', 'D'];
+
+                this.state.currentExam.questions.forEach((q, idx) => {
+                    let statusClass, statusText, statusIcon;
+                    let typeClass = "all ";
+                    
+                    if (q.userAnswer === null) {
+                        statusClass = "text-slate-500 bg-slate-100 border-slate-200";
+                        statusText = "Unattempted";
+                        statusIcon = "fa-minus";
+                        typeClass += "unattempted";
+                    } else if (q.userAnswer === q.answer) {
+                        statusClass = "text-emerald-700 bg-emerald-50 border-emerald-200";
+                        statusText = "Correct";
+                        statusIcon = "fa-check";
+                        typeClass += "correct";
+                    } else {
+                        statusClass = "text-rose-700 bg-rose-50 border-rose-200";
+                        statusText = "Incorrect";
+                        statusIcon = "fa-xmark";
+                        typeClass += "incorrect";
+                    }
+
+                    let optionsHTML = '';
+                    q.options.forEach((opt, i) => {
+                        let optStyle = "border-slate-200 text-slate-600";
+                        let badge = "";
+                        
+                        if (i === q.answer) {
+                            optStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 font-medium";
+                            badge = `<i class="fa-solid fa-check-circle text-emerald-500 ml-2"></i>`;
+                        } else if (i === q.userAnswer && q.userAnswer !== q.answer) {
+                            optStyle = "border-rose-400 bg-rose-50 text-rose-800";
+                            badge = `<i class="fa-solid fa-times-circle text-rose-500 ml-2"></i> <span class="text-[10px] sm:text-xs text-rose-500 ml-1">(Your Answer)</span>`;
+                        }
+
+                        optionsHTML += `
+                            <div class="p-2 sm:p-3 border rounded-lg mb-2 flex items-center ${optStyle} text-sm sm:text-base">
+                                <span class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-white border border-current rounded-full text-[10px] sm:text-xs font-bold mr-2 sm:mr-3 shrink-0">${labels[i]}</span>
+                                <span>${opt}</span>
+                                ${badge}
+                            </div>
+                        `;
+                    });
+
+                    const m = Math.floor(q.timeSpent / 60);
+                    const s = q.timeSpent % 60;
+                    const timeStr = m > 0 ? `${m}m ${s}s` : `${s}s`;
+
+                    container.innerHTML += `
+                        <div class="solution-card bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm ${typeClass}">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-7 h-7 sm:w-8 sm:h-8 bg-slate-800 text-white rounded-lg flex items-center justify-center font-bold text-sm sm:text-base">${idx + 1}</div>
+                                    <div class="px-2 py-1 rounded text-[10px] sm:text-xs font-bold border ${statusClass}">
+                                        <i class="fa-solid ${statusIcon} mr-1"></i> ${statusText}
+                                    </div>
+                                </div>
+                                <div class="text-xs text-slate-500 font-medium flex items-center bg-slate-50 px-2 py-1 rounded w-fit">
+                                    <i class="fa-regular fa-clock mr-1"></i> Time Spent: ${timeStr}
+                                </div>
+                            </div>
+                            
+                            <div class="text-sm sm:text-base text-slate-800 font-medium mb-4">${q.text}</div>
+                            
+                            <div class="mb-4">
+                                ${optionsHTML}
+                            </div>
+
+                            <div class="bg-brand-50 border-l-4 border-brand-500 p-3 sm:p-4 rounded-r-lg mt-4">
+                                <div class="text-[10px] sm:text-xs font-bold text-brand-800 uppercase tracking-wider mb-1">Explanation</div>
+                                <div class="text-xs sm:text-sm text-slate-700">${q.explanation}</div>
+                                <div class="mt-3 flex space-x-2">
+                                    <span class="text-[10px] sm:text-xs bg-white border border-slate-200 px-2 py-1 rounded text-slate-500">Topic: ${q.topic}</span>
+                                    <span class="text-[10px] sm:text-xs bg-white border border-slate-200 px-2 py-1 rounded text-slate-500">Difficulty: ${q.difficulty}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            },
+
+            filterSolutions(type) {
+                const cards = document.querySelectorAll('.solution-card');
+                cards.forEach(card => {
+                    if (type === 'all') {
+                        card.style.display = 'block';
+                    } else {
+                        if (card.classList.contains(type)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    }
+                });
+            },
+
+            scrollToSolutions() {
+                document.getElementById('solutions-section').scrollIntoView({ behavior: 'smooth' });
+            },
+
+            // --- Utility ---
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+        };
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
